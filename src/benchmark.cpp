@@ -50,6 +50,19 @@ static void BM_evaluate(benchmark::State& state) {
     }
 }
 
+static void BM_evaluate_no_branch(benchmark::State& state) {
+    int i = 0;
+    auto data = create_data();
+    for (auto _ : state) {
+        if(i >= COMBOS) {
+            i = 0;
+        }
+        auto cards = data[i++];
+        benchmark::DoNotOptimize(evaluate_hand_no_branch(cards));
+        benchmark::ClobberMemory();
+    }
+}
+
 static void BM_get(benchmark::State& state) {
     int i = 0;
     auto data = create_data();
@@ -88,6 +101,7 @@ static void BM_rand(benchmark::State& state) {
 }
     
 BENCHMARK(BM_evaluate);
+BENCHMARK(BM_evaluate_no_branch);
 BENCHMARK(BM_get);
 BENCHMARK(BM_get_rand);
 BENCHMARK(BM_rand);
