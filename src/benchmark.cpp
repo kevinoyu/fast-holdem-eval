@@ -7,6 +7,7 @@
 #include <benchmark/benchmark.h>
 
 #include "card_ops.h"
+#include "card_ops_fast_branch.h"
 
 constexpr auto COMBOS = 133784560;
 constexpr unsigned long ACE_MASK = 0x2000200020002000;
@@ -15,6 +16,7 @@ std::vector<unsigned long> create_data() {
     std::vector<unsigned long> v(0);
     v.reserve(COMBOS);
     
+    // generate packed 52 bit hand representation - compiler optimizes pretty well
     for(unsigned long i = 1UL << 51; i > 0; i >>= 1) 
         for(unsigned long j = i >> 1; j > 0; j >>= 1) 
             for(unsigned long k = j >> 1; k > 0; k >>= 1)
@@ -50,7 +52,7 @@ static void BM_evaluate(benchmark::State& state) {
     }
 }
 
-static void BM_evaluate_no_branch(benchmark::State& state) {
+static void BM_evaluate_fast_branch(benchmark::State& state) {
     int i = 0;
     auto data = create_data();
     for (auto _ : state) {
@@ -58,7 +60,7 @@ static void BM_evaluate_no_branch(benchmark::State& state) {
             i = 0;
         }
         auto cards = data[i++];
-        benchmark::DoNotOptimize(evaluate_hand_no_branch(cards));
+        benchmark::DoNotOptimize(evaluate_hand_fast_branch(cards));
         benchmark::ClobberMemory();
     }
 }
@@ -101,7 +103,7 @@ static void BM_rand(benchmark::State& state) {
 }
     
 BENCHMARK(BM_evaluate);
-BENCHMARK(BM_evaluate_no_branch);
+BENCHMARK(BM_evaluate_fast_branch);
 BENCHMARK(BM_get);
 BENCHMARK(BM_get_rand);
 BENCHMARK(BM_rand);
