@@ -60,7 +60,7 @@ inline unsigned long no_trips(unsigned long pairs, unsigned long singles)
     {
     case 3: // if there are three pairs, unset the smallest one
         pairs &= pairs - 1;
-    case 2: // deliberate fallthrough - reduces compiled asm by a couple lines 
+    case 2: // deliberate fallthrough - reduces compiled asm by a couple lines
         return TWO_PAIR_RESULT | pairs << 16 | first_bit(singles);
     [[likely]] default: // either one or no pair. in one pair case, there are 5 singles.
                         // in no pair case, there are 7 singles. in both cases, can return pairs and singles with bottom two bits dropped

@@ -4,36 +4,45 @@
 unsigned long no_trips_fast_branch(unsigned long pairs, unsigned long singles)
 {
     auto two_pair = TWO_PAIR_RESULT | pairs << 16 | first_bit(singles);
-    auto three_pair = TWO_PAIR_RESULT | (pairs & (pairs-1)) << 16 | first_bit(singles);
-    pairs &= pairs-1;pairs &= pairs-1;
-    auto no_pair = pairs << 16 | first_bit(singles);;
-    
-    if(!pairs) [[likely]] return no_pair;
-    else if(std::popcount(pairs) == 1) return two_pair;
-    else return three_pair; 
+    auto three_pair = TWO_PAIR_RESULT | (pairs & (pairs - 1)) << 16 | first_bit(singles);
+    pairs &= pairs - 1;
+    pairs &= pairs - 1;
+    auto no_pair = pairs << 16 | first_bit(singles);
+
+    if (!pairs) [[likely]]
+        return no_pair;
+    else if (std::popcount(pairs) == 1)
+        return two_pair;
+    else
+        return three_pair;
 }
 
- unsigned long one_trips_fast_branch(unsigned long trips, unsigned long pairs, unsigned long singles)
+unsigned long one_trips_fast_branch(unsigned long trips, unsigned long pairs, unsigned long singles)
 {
     auto two_pairs = 1UL << 59 | trips << 16 | (pairs & -pairs);
     auto one_pair = 1UL << 59 | trips << 16 | pairs;
-    
+
     auto out = trips << 32;
     auto mask = first_bit(singles);
     singles &= ~mask;
     mask |= first_bit(singles);
-    
-    if(std::popcount(pairs) == 0) [[likely]] {
+
+    if (std::popcount(pairs) == 0) [[likely]]
+    {
         return out | mask;
-    } else if (std::popcount(pairs) == 1) {
+    }
+    else if (std::popcount(pairs) == 1)
+    {
         return one_pair;
-    } else {
+    }
+    else
+    {
         return two_pairs;
     }
 }
 
-
-unsigned long result_fast_branch(unsigned long trips, unsigned long pairs, unsigned long singles) {
+unsigned long result_fast_branch(unsigned long trips, unsigned long pairs, unsigned long singles)
+{
     switch (std::popcount(trips))
     {
     [[unlikely]] case 2:
