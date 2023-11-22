@@ -1,59 +1,6 @@
 #pragma once
 #include "card_ops.h"
 
-unsigned long no_trips_fast_branch(unsigned long pairs, unsigned long singles)
-{
-    auto two_pair = TWO_PAIR_RESULT | pairs << 16 | first_bit(singles);
-    auto three_pair = TWO_PAIR_RESULT | (pairs & (pairs - 1)) << 16 | first_bit(singles);
-    pairs &= pairs - 1;
-    pairs &= pairs - 1;
-    auto no_pair = pairs << 16 | first_bit(singles);
-
-    if (!pairs) [[likely]]
-        return no_pair;
-    else if (std::popcount(pairs) == 1)
-        return two_pair;
-    else
-        return three_pair;
-}
-
-unsigned long one_trips_fast_branch(unsigned long trips, unsigned long pairs, unsigned long singles)
-{
-    auto two_pairs = 1UL << 59 | trips << 16 | (pairs & -pairs);
-    auto one_pair = 1UL << 59 | trips << 16 | pairs;
-
-    auto out = trips << 32;
-    auto mask = first_bit(singles);
-    singles &= ~mask;
-    mask |= first_bit(singles);
-
-    if (std::popcount(pairs) == 0) [[likely]]
-    {
-        return out | mask;
-    }
-    else if (std::popcount(pairs) == 1)
-    {
-        return one_pair;
-    }
-    else
-    {
-        return two_pairs;
-    }
-}
-
-unsigned long result_fast_branch(unsigned long trips, unsigned long pairs, unsigned long singles)
-{
-    switch (std::popcount(trips))
-    {
-    [[unlikely]] case 2:
-        return FULL_HOUSE_RESULT | ((trips & (trips - 1)) << 16) | last_bit(trips);
-    case 1:
-        return one_trips_fast_branch(trips, pairs, singles);
-    [[likely]] default:
-        return no_trips_fast_branch(pairs, singles);
-    }
-}
-
 inline unsigned long evaluate_hand_fast_branch(const unsigned long &cards)
 {
     // bitwise or across each 16 bit suit to find all present ranks
@@ -95,7 +42,7 @@ inline unsigned long evaluate_hand_fast_branch(const unsigned long &cards)
     // check for straights - if there is, return index of first set bit in the straight mask % 16 (which should be fast) in order to make straights across suits comparable
     auto straight_mask = detect_straight(or_ranks);
     if (straight_mask) [[unlikely]]
-        return STRAIGHT_RESULT | first_bit_idx(straight_mask) % 16;
+        return STRAIGHT_RESULT | first_bit(straight_mask);
 
     unsigned long singles = 0, pairs = 0, trips = 0;
 
@@ -114,5 +61,5 @@ inline unsigned long evaluate_hand_fast_branch(const unsigned long &cards)
     pairs &= SUIT_MASK;
     trips &= SUIT_MASK;
 
-    return result_fast_branch(trips, pairs, singles);
+    return result(trips, pairs, singles);
 }

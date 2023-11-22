@@ -26,7 +26,7 @@ inline unsigned long first_bit(unsigned long x)
 
 inline unsigned long last_bit(unsigned long x)
 {
-    return x & -x;
+    return 1UL <<  std::countr_zero(x);
 }
 
 inline unsigned long detect_straight(unsigned long x)
@@ -120,7 +120,7 @@ inline unsigned long evaluate_hand(const unsigned long &cards)
         // check for straights - if there is, return index of first set bit in the straight mask % 16 (which should be fast) in order to make straights across suits comparable
         auto straight_mask = detect_straight(or_ranks);
         if (straight_mask) [[unlikely]]
-            return STRAIGHT_RESULT | first_bit_idx(straight_mask) % 16;
+            return STRAIGHT_RESULT | first_bit(straight_mask);
     }
     [[likely]] case 4:
     case 3:
@@ -132,7 +132,7 @@ inline unsigned long evaluate_hand(const unsigned long &cards)
 
         // if quads exist, return the bit representing quad ranks as well as the highest non-quad high card
         if (and_ranks)
-            return QUADS_RESULT | and_ranks << 16 | first_bit_idx(or_ranks ^ and_ranks);
+            return QUADS_RESULT | and_ranks << 16 | first_bit(or_ranks ^ and_ranks);
 
         unsigned long singles = 0, pairs = 0, trips = 0;
 
