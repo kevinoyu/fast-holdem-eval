@@ -3,6 +3,10 @@
 
 inline unsigned long evaluate_hand_fast_branch(const unsigned long &cards)
 {
+    auto straight_flush_mask = detect_straight(cards);
+    if (straight_flush_mask) [[unlikely]]
+        return STRAIGHT_FLUSH_RESULT | first_bit_idx(straight_flush_mask) % 16;
+
     // bitwise or across each 16 bit suit to find all present ranks
     auto or_ranks = cards | (cards >> 32);
     or_ranks |= or_ranks >> 16;
@@ -10,10 +14,6 @@ inline unsigned long evaluate_hand_fast_branch(const unsigned long &cards)
     // bitwise and across each 16 bit suit - any set bits represent quads
     auto and_ranks = cards & (cards >> 32);
     and_ranks &= and_ranks >> 16;
-
-    auto straight_flush_mask = detect_straight(cards);
-    if (straight_flush_mask) [[unlikely]]
-        return STRAIGHT_FLUSH_RESULT | first_bit_idx(straight_flush_mask) % 16;
 
     // if quads exist, return the bit representing quad ranks as well as the highest non-quad high card
     if (and_ranks)
@@ -32,7 +32,7 @@ inline unsigned long evaluate_hand_fast_branch(const unsigned long &cards)
             for (int j = 0; j < 5; ++j)
             {
                 auto bit = first_bit(suit);
-                result |= first_bit(suit);
+                result |= bit;
                 suit &= ~bit;
             }
             return result;

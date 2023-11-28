@@ -26,7 +26,7 @@ inline unsigned long first_bit(unsigned long x)
 
 inline unsigned long last_bit(unsigned long x)
 {
-    return 1UL <<  std::countr_zero(x);
+    return x & -x;
 }
 
 inline unsigned long detect_straight(unsigned long x)
